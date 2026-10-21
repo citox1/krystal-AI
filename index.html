@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<meta name="theme-color" content="#0b0715">
+
+<title>Krystal AI</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;background:#0b0715;color:#f5efff;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+
+header{padding:25px 20px 16px;border-bottom:1px solid #302342}
+
+h1{margin:0;color:#c5a3ff;letter-spacing:5px;font-size:25px}
+
+header p{color:#a99bbd;font-size:13px}
+
+#status{color:#b9a0df;font-size:12px}
+
+#chat{height:calc(100dvh - 205px);overflow:auto;padding:18px 14px}
+
+.msg{padding:13px 15px;border-radius:17px;margin:10px 0;max-width:88%;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+
+.ai{background:#201630;border:1px solid #3c2854}
+
+.user{background:#583c82;margin-left:auto}
+
+#bottom{position:fixed;bottom:0;left:0;right:0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:#100b1c;border-top:1px solid #302342}
+
+#access,#message{width:100%;padding:14px;border:1px solid #48365f;border-radius:12px;background:#1b1327;color:white;font:inherit;margin-bottom:8px}
+
+#message{resize:none}
+
+button{border:0;border-radius:12px;padding:13px;background:#a87bff;color:#160b27;font-weight:700;font-size:15px}
+
+#send{width:100%}
+
+#hint{font-size:11px;color:#a99bbd;margin:8px 2px 0}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>KRYSTAL</h1>
+
+<p>Your AI. Your world. Your rules.</p>
+
+<div id="status">Ready when you are.</div>
+
+</header>
+
+<main id="chat">
+
+<div class="msg ai">Hey! I'm Krystal. ✨ My journey starts here. Send me a message!</div>
+
+</main>
+
+<section id="bottom">
+
+<input id="access" type="password" placeholder="Your private access code" autocomplete="off">
+
+<textarea id="message" rows="2" placeholder="Talk to Krystal..."></textarea>
+
+<button id="send">Send message ↗</button>
+
+<div id="hint">Your API key stays on the server. Never share your access code.</div>
+
+</section>
+
+<script>
+
+const chat=document.querySelector("#chat");
+
+const message=document.querySelector("#message");
+
+const access=document.querySelector("#access");
+
+const status=document.querySelector("#status");
+
+const send=document.querySelector("#send");
+
+function bubble(text,who){
+
+ const el=document.createElement("div");
+
+ el.className="msg "+who;
+
+ el.textContent=text;
+
+ chat.appendChild(el);
+
+ chat.scrollTop=chat.scrollHeight;
+
+}
+
+async function talk(){
+
+ const text=message.value.trim();
+
+ if(!text||send.disabled)return;
+
+ if(!access.value){status.textContent="Enter your access code first.";return;}
+
+ bubble(text,"user");
+
+ message.value="";
+
+ send.disabled=true;
+
+ status.textContent="Krystal is thinking...";
+
+ try{
+
+  const response=await fetch("/.netlify/functions/chat",{
+
+   method:"POST",
+
+   headers:{"Content-Type":"application/json"},
+
+   body:JSON.stringify({message:text,accessCode:access.value})
+
+  });
+
+  const data=await response.json();
+
+  if(!response.ok)throw new Error(data.error||"Request failed");
+
+  bubble(data.reply,"ai");
+
+  status.textContent="Krystal is online ✨";
+
+ }catch(e){
+
+  bubble("I couldn't connect: "+e.message,"ai");
+
+  status.textContent="Connection problem";
+
+ }finally{
+
+  send.disabled=false;
+
+  message.focus();
+
+ }
+
+}
+
+send.addEventListener("click",talk);
+
+message.addEventListener("keydown",e=>{
+
+ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();talk();}
+
+});
+
+</script>
+
+</body>
+
+</html>
